@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    int id;
+    char modelo[50];
+    char placa[10];
+    int ano;
+} Veiculo;
+
+FILE *abrirArquivo(const char *modo) {
+    return fopen("veiculos.dat", modo);
+}
+
+void adicionarVeiculo() {
+    Veiculo v;
+    FILE *arquivo = abrirArquivo("ab");
+    if (!arquivo) return;
+
+    printf("ID: ");
+    scanf("%d", &v.id);
+    getchar();
+    printf("Modelo: ");
+    fgets(v.modelo, 50, stdin);
+    strtok(v.modelo, "\n");
+    printf("Placa: ");
+    fgets(v.placa, 10, stdin);
+    strtok(v.placa, "\n");
+    printf("Ano: ");
+    scanf("%d", &v.ano);
+
+    fwrite(&v, sizeof(Veiculo), 1, arquivo);
+    fclose(arquivo);
+}
+
+void listarVeiculos() {
+    Veiculo v;
+    FILE *arquivo = abrirArquivo("rb");
+    if (!arquivo) return;
+
+    while (fread(&v, sizeof(Veiculo), 1, arquivo)) {
+        printf("\nID: %d\nModelo: %s\nPlaca: %s\nAno: %d\n", v.id, v.modelo, v.placa, v.ano);
+    }
+    fclose(arquivo);
+}
+
+int main() {
+    int opcao;
+
+    do {
+        printf("\n1. Adicionar Veículo\n2. Listar Veículos\n0. Sair\nOpção: ");
+        scanf("%d", &opcao);
+
+        if (opcao == 1) adicionarVeiculo();
+        if (opcao == 2) listarVeiculos();
+    } while (opcao != 0);
+
+    return 0;
+}
