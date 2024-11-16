@@ -1,0 +1,145 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    int codigo;
+    char titulo[50];
+    char autor[50];
+    int ano;
+} Livro;
+
+const char *ARQUIVO = "catalogo_livros.dat";
+
+void adicionarLivro() {
+    Livro novoLivro;
+    FILE *arquivo = fopen(ARQUIVO, "ab");
+
+    if (!arquivo) return;
+
+    printf("Código: ");
+    scanf("%d", &novoLivro.codigo);
+    getchar();
+    printf("Título: ");
+    fgets(novoLivro.titulo, sizeof(novoLivro.titulo), stdin);
+    strtok(novoLivro.titulo, "\n");
+    printf("Autor: ");
+    fgets(novoLivro.autor, sizeof(novoLivro.autor), stdin);
+    strtok(novoLivro.autor, "\n");
+    printf("Ano de publicação: ");
+    scanf("%d", &novoLivro.ano);
+
+    fwrite(&novoLivro, sizeof(Livro), 1, arquivo);
+    fclose(arquivo);
+}
+
+void alterarLivro() {
+    int codigo, encontrado = 0;
+    Livro livro;
+
+    printf("Código do livro: ");
+    scanf("%d", &codigo);
+
+    FILE *arquivo = fopen(ARQUIVO, "rb+");
+    if (!arquivo) return;
+
+    while (fread(&livro, sizeof(Livro), 1, arquivo)) {
+        if (livro.codigo == codigo) {
+            encontrado = 1;
+            printf("Novo título: ");
+            getchar();
+            fgets(livro.titulo, sizeof(livro.titulo), stdin);
+            strtok(livro.titulo, "\n");
+            printf("Novo autor: ");
+            fgets(livro.autor, sizeof(livro.autor), stdin);
+            strtok(livro.autor, "\n");
+            printf("Novo ano de publicação: ");
+            scanf("%d", &livro.ano);
+            fseek(arquivo, -sizeof(Livro), SEEK_CUR);
+            fwrite(&livro, sizeof(Livro), 1, arquivo);
+            break;
+        }
+    }
+
+    fclose(arquivo);
+}
+
+void excluirLivro() {
+    int codigo, encontrado = 0;
+    Livro livro;
+
+    printf("Código do livro: ");
+    scanf("%d", &codigo);
+
+    FILE *arquivo = fopen(ARQUIVO, "rb");
+    FILE *temp = fopen("temp.dat", "wb");
+    if (!arquivo || !temp) return;
+
+    while (fread(&livro, sizeof(Livro), 1, arquivo)) {
+        if (livro.codigo != codigo) {
+            fwrite(&livro, sizeof(Livro), 1, temp);
+        } else {
+            encontrado = 1;
+        }
+    }
+
+    fclose(arquivo);
+    fclose(temp);
+    remove(ARQUIVO);
+    rename("temp.dat", ARQUIVO);
+}
+
+void consultarLivro() {
+    int codigo, encontrado = 0;
+    Livro livro;
+
+    printf("Código do livro: ");
+    scanf("%d", &codigo);
+
+    FILE *arquivo = fopen(ARQUIVO, "rb");
+    if (!arquivo) return;
+
+    while (fread(&livro, sizeof(Livro), 1, arquivo)) {
+        if (livro.codigo == codigo) {
+            encontrado = 1;
+            printf("\nCódigo: %d\nTítulo: %s\nAutor: %s\nAno de publicação: %d\n",
+                   livro.codigo, livro.titulo, livro.autor, livro.ano);
+            break;
+        }
+    }
+
+    fclose(arquivo);
+}
+
+void listarLivros() {
+    Livro livro;
+    FILE *arquivo = fopen(ARQUIVO, "rb");
+
+    if (!arquivo) return;
+
+    while (fread(&livro, sizeof(Livro), 1, arquivo)) {
+        printf("\nCódigo: %d\nTítulo: %s\nAutor: %s\nAno de publicação: %d\n",
+               livro.codigo, livro.titulo, livro.autor, livro.ano);
+    }
+
+    fclose(arquivo);
+}
+
+int main() {
+    int opcao;
+
+    do {
+        printf("\n1. Adicionar\n2. Alterar\n3. Excluir\n4. Consultar\n5. Listar\n0. Sair\nOpção: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1: adicionarLivro(); break;
+            case 2: alterarLivro(); break;
+            case 3: excluirLivro(); break;
+            case 4: consultarLivro(); break;
+            case 5: listarLivros(); break;
+        }
+    } while (opcao != 0);
+
+    return 0;
+}
